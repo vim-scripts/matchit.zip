@@ -1,7 +1,7 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: Wed May 12 10:00 AM 2004 EDT
+"  Last Change: Sat May 15 11:00 AM 2004 EDT
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.8, for Vim 6.3
+"  Version:     1.9, for Vim 6.3
 "  URL:		http://www.vim.org/script.php?script_id=39
 
 " Documentation:
@@ -252,7 +252,9 @@ function! s:Match_wrapper(word, forward, mode) range
 
   " Fifth step:  actually start moving the cursor and call searchpair().
   " Later, :execute restore_cursor to get to the original screen.
-  let restore_cursor = line(".") . "G" . virtcol(".") . "|"
+  let restore_cursor = virtcol(".") . "|"
+  normal! g0
+  let restore_cursor = line(".") . "G" .  virtcol(".") . "|zs" . restore_cursor
   normal! H
   let restore_cursor = "normal!" . line(".") . "Gzt" . restore_cursor
   execute restore_cursor
@@ -266,7 +268,7 @@ function! s:Match_wrapper(word, forward, mode) range
     execute "if " . skip . "| let skip = '0' | endif"
   endif
   let sp_return = searchpair(ini, mid, fin, flag, skip)
-  let final_position = line(".") . "normal!" . virtcol(".") . "|"
+  let final_position = "call cursor(" . line(".") . "," . col(".") . ")"
   " Restore cursor position and original screen.
   execute restore_cursor
   normal! m'
@@ -673,7 +675,7 @@ fun! s:MultiMatch(spflag, mode)
   " - TODO:  A lot of this is copied from s:Match_wrapper().
   " - maybe even more functionality should be split off
   " - into separate functions!
-  let cdefault = (strlen(s:pat) ? "," : "") . default
+  let cdefault = (s:pat =~ '[^,]$' ? "," : "") . default
   let open =  substitute(s:pat . cdefault, ':[^,]*,', '\\),\\(', 'g')
   let open =  '\(' . substitute(open, ':[^,]*$', '\\)', '')
   let close = substitute(s:pat . cdefault, ',[^,]*:', '\\),\\(', 'g')
@@ -686,7 +688,12 @@ fun! s:MultiMatch(spflag, mode)
     let skip = 's:comment\|string'
   endif
   let skip = s:ParseSkip(skip)
-  let restore_cursor = line(".") . "G" . virtcol(".") . "|"
+  " let restore_cursor = line(".") . "G" . virtcol(".") . "|"
+  " normal! H
+  " let restore_cursor = "normal!" . line(".") . "Gzt" . restore_cursor
+  let restore_cursor = virtcol(".") . "|"
+  normal! g0
+  let restore_cursor = line(".") . "G" .  virtcol(".") . "|zs" . restore_cursor
   normal! H
   let restore_cursor = "normal!" . line(".") . "Gzt" . restore_cursor
   execute restore_cursor
