@@ -1,0 +1,650 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!-- (C) 2000 by Benji Fisher, <benji@member.AMS.org>
+     URL:  http://sites.netscape.net/BBenjiF/vim/beta/matchit.html
+     FILE: "D:\vim\beta\matchit.html"
+     UPLOAD: URL="ftp://siteftp.netscape.net/vim/beta/matchit.html"
+     UPLOAD: USER="bbenjif"
+     $Id:$ -->
+<html lang="en">
+<head>
+    <title>Documentation for matchit.vim</title>
+    <link rev=Made href="mailto:benji@member.AMS.org">
+    <link rel=Start href="./">
+    <link rel=Copyright href="__HEADER_COPYRIGHT__">
+    <meta name="author" content="Benji Fisher, <benji@member.AMS.org>">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Vim">
+</head>
+
+<body lang=en>
+
+<!-- text goes here -->
+<!--Table of Contents-->
+[
+<a href="#intro">Intro</a> |
+<a href="#credits">Credits</a> |
+<a href="#install">Install</a> |
+<a href="#configure">Configure</a> |
+<a href="#comments">Comments</a> |
+<a href="#newlang">New Language</a> |
+<a href="#debug">Debugging</a> |
+<a href="#details">Details</a> |
+<a href="#bugs">Bugs</a> |
+<a href="#support">Support</a> |
+<a href="#changelog">Change Log</a>
+]
+
+<a name="intro">
+<h1>Introduction</h1>
+In Vim, as in plain vi, the percent key, <kbd>%</kbd>, jumps the cursor from
+a brace, bracket, or paren to its match.
+(For details, type <kbd>:help %</kbd> from within Vim.)
+This can be configured with the <kbd>'matchpairs'</kbd> option
+(<kbd>:help 'matchpairs'</kbd>).  The script
+<a href= "http://sites.netscape.net/BBenjiF/vim/beta/matchit.vim">
+<kbd>matchit.vim</kbd></a>
+extends this in several ways:
+<ul>
+	<li>You can match whole words, such as <kbd>if</kbd> and
+	<kbd>endif</kbd>, not just single characters.</li>
+	<li>You can define groups with more than two words, such as
+	<kbd>if, else, endif</kbd>.
+	Banging on the <kbd>%</kbd> will cycle from the <kbd>if</kbd> to the
+	first <kbd>else</kbd>, the next <kbd>else</kbd>, ..., the closing
+	<kbd>endif</kbd>, and back to the opening <kbd>if</kbd>.  Nested
+	structures are skipped.</li>
+	<li>By default, words inside comments are ignored, unless the cursor
+	is inside a comment when you type <kbd>%</kbd>.  If the only thing you
+	want to do is modify the behavior of <kbd>%</kbd> so that it treats
+	comments this way, you can<br>
+	<kbd>:let b:match_words = &amp;matchpairs</kbd><br>
+	and source the script.
+	See the description of <a href="#comments">comments</a> for
+	details.</li>
+</ul>
+
+<p>Currently, the following languages are supported:
+Ada,
+ASP with VBS,
+Csh,
+DTD,
+Entity,
+Essbase,
+Fortran,
+HTML,
+JSP (same as HTML),
+LaTeX,
+Lua,
+Pascal,
+SGML,
+Shell,
+Tcsh,
+Vim,
+XML.<br>
+
+To support a new language, see
+<a href="#newlang">below</a>.
+</p>
+
+
+<a name="credits">
+<h1>Credits</h1>
+<p>
+This script was started by Raul Segura Acevedo.  Support for comments was
+added by Douglas Potts.  Support for back references and other improvements
+were made by Benji Fisher, who is the current maintainer (as of April,
+2000).  Johannes Zellner added support for many languages.  Suggestions for
+improvement, bug reports, and support for additional languages were
+contributed by
+Jordi-Albert Batalla,
+Neil Bird,
+Mark Collett,
+Stephen Wall,
+and
+Johannes Zellner.
+</p>
+
+<p>If you use this script and like it, type
+<kbd>:help uganda</kbd>
+from within Vim.</p>
+
+<a name="install">
+<h1>Installation</h1>
+First,
+<a href="matchit.vim">download</a> <kbd>matchit.vim</kbd>.
+For these instructions, I assume that you save it as
+<kbd>$VIM/matchit.vim</kbd>.
+(This is appropriate on single-user systems.  For multi-user systems,
+something like
+<kbd>$HOME/vim/matchit.vim</kbd>
+would be more reasonable.)  There is nothing magic about the directory nor the
+name of the file.  Note that most users only have to follow Step 2 below.
+<ol>
+	<li>(optional)  If you want to "test drive" before you commit
+	yourself, do<br>
+	<kbd>:source $VIM/matchit.vim</kbd><br>
+	within Vim.  Then open a file with one of the supported file types and
+	start banging on the <kbd>%</kbd> key.  If you already have the file
+	open, you will have to trigger the autocommand that defines
+	<kbd>b:match_words</kbd>, so do<br>
+	<kbd>:set ft=&lt;file type&gt;</kbd><br>
+	where &lt;file type&gt; is the current file type:  <kbd>tex</kbd>,
+	<kbd>html</kbd>, <kbd>vim</kbd>, or whatever.
+	</li>
+	<li>Add the line<br>
+	<kbd>:source $VIM/matchit.vim</kbd><br>
+	to your vimrc file.  (If you do not have a vimrc file, read
+	<kbd>:help vimrc</kbd>
+	within Vim.)  It should start working the next time you start Vim.  If
+	you are impatient and do not want to restart Vim, see the previous
+	step.</li>
+	<li>(trouble shooting)  What if nothing happens?  Check the file
+	<kbd>matchit.vim</kbd> and look for a line like<br>
+	<kbd>au FileType html ...</kbd><br>
+	for the file type you are using.  If your file type is not yet
+	supported, go to the section on
+	<a href="#newlang">supporting a new language</a>.
+	If it is supported, return to the file you were editing and type<br>
+	<kbd>:echo b:match_words&lt;CR&gt;</kbd><br>
+	where <kbd>&lt;CR&gt;</kbd> means a carriage-return.  If this is not
+	set as indicated in the autocommand, try<br>
+	<kbd>:filetype on<br>
+		:set ft=&lt;file type&gt;</kbd><br>
+	You should consider adding a
+	<kbd>:filetype on</kbd>
+	or
+	<kbd>:syntax on</kbd>
+	line to your vimrc file (or gvimrc file).  If <kbd>b:match_words</kbd>
+	is still not set, check that the autocommand has been defined:<br>
+	<kbd>:au Matchit FileType &lt;file type&gt;</kbd><br>
+	This should show an autocommand to set <kbd>b:match_words</kbd>.  If
+	it does not, try sourcing <kbd>matchit.vim</kbd> again.  If the
+	autocommand is there but <kbd>b:match_words</kbd> is still not set, I
+	am stumped.  Maybe you should replace <kbd>FileType html</kbd> in the
+	autocommand with <kbd>BufRead,BufNewFile *.html</kbd> or whatever.
+	Maybe it is time to <a href="#support">ask for help</a>.
+	</li>
+</ol>
+
+<a name="configure">
+<h1>Configuration</h1>
+There are several variables (and one highlight group) that govern the behavior
+of <kbd>matchit.vim</kbd>.  Note that these are variables local to the buffer,
+not options, so use <kbd>:let</kbd> to define them, not <kbd>:set</kbd>.  Some
+of these variables have values that matter; for others, it only matters
+whether the variable has been defined.  All of these can be defined in the
+autocommand that defines <kbd>b:match_words</kbd> or "on the fly."
+<ul>
+	<li><kbd>b:match_words</kbd>:
+	This is the main variable.  See the section below on
+	<a href="#newlang">supporting a new language</a>.</li>
+	<li><kbd>MatchError</kbd>:
+	This is the highlight group for error messages from the script.  By
+	default, it is linked to WarningMsg.  If you do not want to be bothered
+	by error messages, you can define this to be something invisible.  For
+	example, if you use the GUI version of Vim and your command line is
+	normally white, you can do<br>
+	<kbd>hi MatchError guifg=white guibg=white</kbd></li>
+	<li><kbd>b:match_ignorecase</kbd>:
+	If you<br>
+	<kbd>:let b:match_ignorecase = 1</kbd><br>
+	then <kbd>matchit.vim</kbd> acts as if <kbd>'ignorecase'</kbd> is set:
+	for example, <kbd>"end"</kbd> and <kbd>"END"</kbd> are equivalent.
+	If you<br>
+	<kbd>:let b:match_ignorecase = 0</kbd><br>
+	then <kbd>matchit.vim</kbd> treats <kbd>"end"</kbd> and
+	<kbd>"END"</kbd> differently.  (There will be no
+	<kbd>b:match_infercase</kbd> unless someone requests it.) </li>
+	<li><kbd>b:match_strings_like_comments</kbd>:
+	If this variable has been defined then strings will be treated
+	like comments.  For example,
+	<kbd>'("(")'</kbd>
+	will not be treated as unbalanced.</li>
+	<li><kbd>b:match_debug</kbd>:
+	Define this variable if you want debugging information to be saved.
+	See the discussion <a href="#debug">debugging information</a>,
+	below.</li>
+	<a name="comments">
+	<li><kbd>b:match_comment</kbd>:
+	If this variable is defined then it is used instead of the
+	syntax-highlighting mechanism to check for comments.  Set this
+	variable to a regular expression that describes the comment character.
+	This only works for one-line comments such as <kbd>'%'</kbd> for LaTeX
+	and <kbd>'//'</kbd> for C++.  Then <kbd>matchit.vim</kbd> will treat
+	anything that occurs after this regular expression in a line as a
+	comment.
+
+	<p>If you want <kbd>matchit.vim</kbd> to treat everything as a
+	non-comment, you can<br>
+	<kbd>:let b:match_comment = '$'</kbd><br>
+	You get much the same effect by
+	<kbd>:let b:match_comment = '^'</kbd><br>
+	because then <kbd>matchit.vim</kbd> decides that the cursor started
+	inside a comment and entirely skips checking for comments.
+
+	<p>Note that, in LaTeX, <kbd>'\%'</kbd> is an escaped percent sign,
+	not the comment character.  On the other hand, <kbd>'\\%'</kbd> is an
+	escaped backslash followed by the comment character.  Thus the actual
+	definition in the autocommand for LaTeX is<br>
+	<kbd>let b:match_comment = '\(^\|[^\\]\)\(\\\\\)*%'</kbd><br>
+	That is, the start of a line or a non-backslash character, followed by
+	an even number (possibly zero) of backslashes (or a whole number of
+	escaped backslashes) followed by the comment character.
+
+	<p>You can get interesting effects in C++ by<br>
+	<kbd>:let b:match_comment = '//'</kbd><br>
+	Then anything inside
+	<kbd>/*...*/</kbd>
+	is treated as a non-comment and anything following a <kbd>'//'</kbd>
+	is treated as a comment.  Try this at your own risk!
+	</li>
+</ul>
+
+<a name="newlang">
+<h1>To support a new language</h1>
+In order for <kbd>matchit.vim</kbd> to support a new language, you must define
+a suitable pattern for <kbd>b:match_words</kbd>.  You may also want to set
+some of the other <a href="#configure">configuration variables</a>, as
+described above.  If you figure out how to support a new language, please
+<a href="mailto:benji@member.AMS.org">send me a copy</a> 
+so that I can include it with future versions of <kbd>matchit.vim</kbd>.  If
+your language has a complicated syntax, or many keywords, you will need to
+know something about Vim's regular expressions, which are very well
+documented:  <kbd>:help pattern</kbd>.  If you need help, see the section on
+<a href="#support">support</a>, below.
+<ol>
+	<li>The format for <kbd>b:match_words</kbd> is similar to that of the
+	<kbd>'matchpairs'</kbd> option:  it is a colon
+	(<kbd>:</kbd>)-separated list of groups; each group is a
+	comma(<kbd>,</kbd>)-separated list of patterns (regular expressions).
+	it is OK to have only one group; the effect is undefined if a group
+	has only one pattern.  A simple example is<br>
+	<kbd>:let b:match_words =
+	'\&lt;if\&gt;,\&lt;endif\&gt;:\&lt;while\&gt;,\&lt;continue\&gt;,\&lt;break\&gt;,\&lt;endwhile\&gt;'</kbd><br>
+	(In Vim regular expressions, <kbd>'\&lt;'</kbd> and <kbd>'\&gt;'</kbd>
+	denote word boundaries.  Thus <kbd>'if'</kbd> matches the end of
+	<kbd>"endif"</kbd> but <kbd>'\&lt;if\&gt;'</kbd> does not.)  Then
+	banging on the <kbd>%</kbd> key will bounce the cursor between
+	<kbd>"if"</kbd> and the matching <kbd>'endif"</kbd>; and from
+	<kbd>"while"</kbd> to any matching <kbd>"continue"</kbd> or
+	<kbd>"break"</kbd>, then to the matching <kbd>"endwhile"</kbd> and
+	back to the <kbd>"while"</kbd>.</li>
+	<li>Once you have defined the appropriate value of
+	<kbd>b:match_words</kbd>, you will probably want to have this set
+	automatically each time you edit the appropriate file type.  The usual
+	way of doing this is by adding an autocommand, either withing the
+	function <kbd>Match_autocommands()</kbd> in the file
+	<kbd>matchit.vim</kbd> or in some file that is sourced after you
+	source <kbd>matchit.vim</kbd>.  Continuing the example above, the
+	autocommand should be something like<br>
+	<kbd>:autocmd Matchit FileType myft let b:match_words =<br>
+	\ '\&lt;if\&gt;,\&lt;endif\&gt;:\&lt;while\&gt;,\&lt;continue\&gt;,\&lt;break\&gt;,\&lt;endwhile\&gt;'</kbd><br>
+	If your version of vim does not support the <kbd>FileType</kbd>
+	autocommand event then you can use <kbd>BufNewFile,BufRead
+	*.myft</kbd> instead of <kbd>FileType myft</kbd>.  If you are using
+	Vim 5.3 or earlier then the line continuation here will not work:  you
+	will have to modify this to make it a single line, and make similar
+	modifications to <kbd>matchit.vim</kbd>.</li>
+	<li>Be careful that your initial pattern does not match your final
+	pattern.  See the example above for the use of word-boundary
+	expressions.</li>
+	<li>It is usually better to use <kbd>'.\{-}'</kbd> (as many as
+	necessary) instead of <kbd>'.*'</kbd> (as many as possible).  For
+	example, in the string
+	<kbd>"&lt;tag&gt;label&lt;/tag&gt;"</kbd>,
+	<kbd>'&lt;.*&gt;'</kbd>
+	matches the whole string whereas
+	<kbd>'&lt;.\{-}&gt;'</kbd>
+	and
+	<kbd>'&lt;[^&gt;]*&gt;'</kbd>
+	match
+	<kbd>"&lt;tag&gt;</kbd>
+	and
+	<kbd>"&lt;/tag&gt;"</kbd>.</li>
+	<li>If <kbd>"if"</kbd> is to be paired with <kbd>"end if"</kbd> (Note
+	the space!) then word boundaries are not enough.  Instead, define a
+	regular expression <kbd>notend</kbd> that will match anything but
+	<kbd>"end"</kbd> and use it as follows:<br>
+	<kbd>let notend = '\(^\s*\|[^d\t ]\s\+\)'</kbd><br>
+	let b:match_words = notend . '\&lt;if\&gt;,\&lt;end\s\+if\&gt;'<br>
+	This is a simplified version of what is done for Ada.  For details,
+	including how to do it while making <kbd>notend</kbd> a local
+	variable, see the autocommand for Ada in <kbd>matchit.vim</kbd>.
+	Similarly, you may want to define a start-of-line regular
+	expression<br>
+	<kbd>:let sol = '\(^\|;\)\s*'</kbd><br>
+	if keywords are only recognized after the start of a line or after a
+	semicolon (<kbd>;</kbd>), with optional white space.</li>
+	<li>In any group, the expressions
+	<kbd>'\1'</kbd>, <kbd>'\2'</kbd>, ..., <kbd>'\9'</kbd>
+	refer to parts of the <strong>initial</strong> pattern enclosed in
+	<kbd>'\('</kbd>escaped parentheses<kbd>'\)'</kbd>.  These are referred
+	to as <strong>back references</strong>, or backrefs.  For example,
+	<kbd>'\&lt;b\(o\+\)\&gt;,\(h\)\1'</kbd>
+	means that
+	<kbd>"bo"</kbd> pairs with <kbd>"ho"</kbd>
+	and
+	<kbd>"boo"</kbd> pairs with <kbd>"hoo"</kbd>
+	and so on.  Note that <kbd>'\1'</kbd> does <strong>not</strong> refer
+	to the <kbd>'\(h\)'</kbd> in this example.  If you have
+	<kbd>'\('</kbd>nested <kbd>'\('</kbd>parentheses<kbd>'\)\)'</kbd>
+	then <kbd>'\d'</kbd> refers to the <kbd>d</kbd>-th
+	<kbd>'\('</kbd>
+	and everything up to and including the matching
+	<kbd>'\)'</kbd>.  In
+	<kbd>'\(nested\(parentheses\)\)'</kbd>,
+	<kbd>'\1'</kbd> refers to everything and <kbd>'\2'</kbd> refers to
+	<kbd>'\(parentheses\)'</kbd>.
+
+	<p>If you use a variable such as <kbd>notend</kbd> or
+	<kbd>sol</kbd> (as in the previous paragraph) then remember to count
+	any <kbd>'\('</kbd> patterns in this variable.
+
+	<p>It should be possible to resolve back references from any pattern
+	in the group.  For example,<br>
+	<kbd>:let b:match_words = '\(foo\)\(bar\),more\1,and\2,end\1\2'</kbd><br>
+	would not work because
+	<kbd>'\2'</kbd> cannot be determined from <kbd>"morefoo"</kbd> and
+	<kbd>'\1'</kbd> cannot be determined from <kbd>"andbar"</kbd>.  On the
+	other hand,<br>
+	<kbd>:let b:match_words = '\(\(foo\)\(bar\)\),\3\2,end\1'</kbd><br>
+	should work (and have the same effect as
+	<kbd>'foobar,barfoo,endfoobar'</kbd>), although this has not been
+	thoroughly tested.</li>
+	<li>The special character <kbd>'\@!'</kbd> means "Put the
+	cursor on the following character."  For example, if the keyword
+	<kbd>"if"</kbd> must occur at the start of the line, with optional
+	white space, you might use the pattern <kbd>'^\s*\@!if'</kbd> so
+	that the cursor will end on the <kbd>"i"</kbd> instead of at the start
+	of the line.  For another example, if HTML had only one tag then one
+	could<br>
+	<kbd>:let b:match_words =
+	'&lt;,&gt;:&lt;\@!tag&gt;,&lt;\@!/tag&gt;'</kbd><br>
+	so that <kbd>%</kbd> can bounce between matching <kbd>&lt;</kbd> and
+	<kbd>&gt;</kbd> pairs or (starting on <kbd>"tag"</kbd> or
+	<kbd>"/tag"</kbd>) between matching tags.</li>
+	<a name="debug">
+	<li>If you are having trouble figuring out the appropriate definition
+	of <kbd>b:match_words</kbd> then you can take advantage of the same
+	information I use when debugging the script.  This is especially true
+	if you are not sure whether your patterns or my script are at fault!
+	To make this more convenient, I have made the command
+	<kbd>:MatchDebug</kbd>, which defines the variable
+	<kbd>b:match_debug</kbd> and creates a <kbd>Matchit</kbd> menu.  This
+	menu makes it convenient to check the values of the variables
+	described below.  You will probably also want to read the
+	<a href="#details">detailed description</a> below of what the script
+	does.
+	
+	<p>Defining the variable <kbd>b:match_debug</kbd> causes the script to
+	set the following variables, each time you hit the <kbd>%</kbd> key.
+	Severasl of these are only defined if <kbd>b:match_words</kbd>
+	includes backrefs.</p>
+	<ul>
+		<li><kbd>b:match_pat</kbd>:
+		<kbd>b:match_words</kbd> with backrefs parsed</li>
+		<li><kbd>b:match_match</kbd>:
+		the bit of text that is recognized as a match</li>
+		<li><kbd>b:match_col</kbd>:
+		the cursor column of the start of the matching text</li>
+		<li><kbd>b:match_wholeBR</kbd>:
+		the comma-separated group of patterns that matches, with
+		backrefs unparsed</li>
+		<li><kbd>b:match_iniBR</kbd>:
+		the first pattern in <kbd>b:match_wholeBR</kbd></li>
+		<li><kbd>b:match_ini</kbd>:
+		the first pattern in <kbd>b:match_wholeBR</kbd>, with backrefs
+		resolved from <kbd>b:match_match</kbd></li>
+		<li><kbd>b:match_tail</kbd>:
+		the remaining patterns in <kbd>b:match_wholeBR</kbd>, with
+		backrefs resolved from <kbd>b:match_match</kbd></li>
+		<li><kbd>b:match_word</kbd>:
+		the pattern from <kbd>b:match_wholeBR</kbd> that matches
+		<kbd>b:match_match</kbd></li>
+		<li><kbd>b:match_table</kbd>:
+		The back reference <kbd>'\'.d</kbd> refers to the same thing
+		as <kbd>'\'.table[d]</kbd> in <kbd>b:match_word</kbd>.</li>
+	</ul></li>
+</ol>
+
+<a name="details">
+<h1>Detailed description of the script</h1>
+Here is an outline of what <kbd>matchit.vim</kbd> does each time you hit the
+<kbd>%</kbd> key, which is mapped to call the function
+<kbd>Match_wrapper()</kbd>.
+<ol>
+	<li>If there are backrefs in <kbd>b:match_words</kbd> then the first
+	step is to produce a version in which these back references have been
+	eliminated; if there are no backrefs then this step is skipped.  I
+	refer to this process as <strong>parsing</strong>.  For
+	example, <kbd>'\(foo\|bar\),end\1'</kbd> is parsed to yield
+	<kbd>'\(foo\|bar\),end\(foo\|bar\)'</kbd>.
+	This can get tricky, especially if there are nested groups, but that
+	has not yet come up in practice.  I am a little concerned that, on
+	some systems, this step may take too long.  It
+	seems wasteful to repeat the same parsing each time you hit the
+	<kbd>%</kbd> key, but I have not yet figured out a way to avoid this,
+	making sure that the original and parsed versions are kept
+	synchronized.  If debugging is turned on, the parsed version is saved
+	as <kbd>b:match_pat</kbd>.</li>
+	<li>Look for a word on the current line that matches the pattern just
+	constructed.  Include the patterns from the <kbd>'matchpairs'</kbd>
+	option.  Unfortunately, this is a little complicated:
+	<ol type=a>
+		<li>Insist on a match that ends on or after the cusor.
+		Prefer a match that includes the cursor position (that
+		is, one that starts on or before the cursor).</li>
+		<li>Prefer a match that starts as close to the cursor as
+		possible.</li>
+		<li>Prefer a match in <kbd>b:match_words</kbd> to a
+		match in <kbd>'matchpairs'</kbd>.  If more than one
+		pattern in <kbd>b:match_words</kbd> matches, choose the
+		one that is listed first.</li>
+	</ol>
+	It would probably be preferable to switch priorities (b) and
+	(c), but that is very hard to do with regular expressions.  (Let
+	me know if you think of a way.)
+	<ul>
+		<li>Example:  given the pattern
+		<kbd>'&lt;,&gt;:&lt;tag&gt;,&lt;/tag&gt;'</kbd>
+		with the cursor on or before the <kbd>"&lt;"</kbd> in
+		<kbd>"a &lt;tag&gt; is born"</kbd>.
+		The pattern <kbd>'&lt;'</kbd> comes first, so it is preferred
+		over <kbd>'&lt;tag&gt;'</kbd>, which also matches.  If the
+		cursor is on the <kbd>"t"</kbd>, however, then 
+		<kbd>'&lt;tag&gt;'</kbd> is preferred, because this matches a
+		bit of text containing the cursor.  If the two groups of
+		patterns were reversed then <kbd>'&lt;'</kbd> would never be
+		preferred.</li>
+		<li>Example:  given the pattern
+		<kbd>'if,end if'</kbd>
+		(Note the space!) and the string "end if".  If the cursor
+		starts on the <kbd>"if"</kbd> then <kbd>'if'</kbd> matches,
+		which is probably not what you want, but if the cursor starts
+		on the <kbd>"end "</kbd> then <kbd>'end if'</kbd> is chosen.
+		</li>
+	</ul>
+	If there is no match, fall back on the usual behavior of <kbd>%</kbd>.
+	If there is a match, move the cursor to its start.
+	If debugging is turned on, the matched bit of text is saved as
+	<kbd>b:match_match</kbd> and the cursor column of the start of the
+	match is saved as <kbd>b:match_col</kbd>.</li>
+	<li>Next, the script looks through <kbd>b:match_words</kbd> (original
+	and parsed versions) for the group and pattern that match.
+	If debugging is turned on, the group is saved as <kbd>b:match_ini</kbd>
+	(the first pattern) and <kbd>b:match_tail</kbd> (the rest).  If there
+	are backrefs then, in addition, the matching pattern is saved as
+	<kbd>b:match_word</kbd> and a table of translations is saved as
+	<kbd>b:match_table</kbd>.</li>
+	<li>If there are backrefs, these are determined from the matching
+	pattern and <kbd>b:match_match</kbd> and substituted into each pattern
+	in the matching group.</li>
+	<li>The script decides whether to search forwards or backwards and
+	calls the function <kbd>Match_Busca()</kbd> with appropriate arguments.
+	This function pays attention to whether the cursor is in a comment and
+	so on.  It implements the usual algorithm for finding matching
+	parentheses:  it counts +1 each time the "openening" pattern is found
+	and -1 each time the "closing" pattern is found, and stops when it
+	reaches zero.  "Opening" and "closing" are interpreted correctly
+	depending on the direction of search, and "in between" patterns are
+	treated appropriately.</li>
+</ol>
+
+<a name="bugs">
+<h1>Known Bugs and Limitations</h1>
+Just because I know about a bug does not mean that it is on my todo list.  I
+try to be responsive to reports of bugs that cause real problems.  If it does
+not cause serious problems, or if there is a work-around, a bug may sit there
+for a while.  Moral:  if a bug (known or not) bothers you,
+<a href="#support">let me know</a>.
+
+<ul>
+	<li>I think that the comma (<kbd>,</kbd>) and colon (<kbd>:</kbd>) are
+	used backwards compared to the syntax for <kbd>'matchpairs'</kbd>.  I
+	may change this in the next version.</li>
+	<li>Since the comma (<kbd>,</kbd>) and colon (<kbd>:</kbd>) are used
+	to separate patterns, they cannot be used as part of a pattern.  I
+	suppose this could be solved by interpreting <kbd>\,</kbd> and
+	<kbd>\:</kbd> as literal characters, but this might be harder than it
+	sounds...  </li>
+	<li>Update:  I think I have solved this.
+	The script does not recognize <kbd>\\</kbd> as an escaped
+	backslash.  Thus <kbd>\\1</kbd>, <kbd>\\(</kbd>, and <kbd>\\)</kbd>
+	cause problems.  This is a problem for LaTeX, where it would be nice
+	to add <kbd>'\\(,\\)'</kbd> to <kbd>b:match_words</kbd>.</li>
+	<li>Update:  I think I have solved this.
+	The script may not treat <kbd>^</kbd> and <kbd>$</kbd> as start-
+	and end-of-line in all cases.  A bug report would help in diagnosing
+	this if, in fact, there is a problem.</li>
+	<li>It would be nice if <kbd>\0</kbd> were recognized as the entire
+	pattern.  That
+	is, it would be nice if <kbd>'foo,\end\0'</kbd> had the same effect as
+	<kbd>'\(foo\),\end\1'</kbd>.  I may try to implement this in a future
+	version.  (This is not so easy to arrange as you might think.)</li>
+</ul>
+
+<a name="support">
+<h1>Getting Help</h1>
+For most purposes, the best source of help is the
+<a href="mailto:vim@vim.org">vim mailing list</a>.
+Note that you must
+<a href="http://www.vim.org/mail.html#subscribe" target="_top">subscribe</a>
+to the list before you can post questions.  Why is this usually better than
+mailing me directly?
+<ul>
+	<li>Someone may already have worked out the language you are trying to
+	support.  They may have neglected to send me the definitions, or I may
+	not have gotten around to including them in <kbd>matchit.vim</kbd>, or
+	you may not have the most recent version.</li>
+	<li>I may be on vacation, or way behind on my e-mail, or I may have
+	given up supporting this script.  The list is always there, and there
+	are helpful people around the world (in many, if not all, time zones)
+	who might help you out.</li>
+	<li>Posting questions to the list has the side effect of advertising
+	this useful script (and thereby stroking my ego).  For this reason,
+	please include the URL when posting questions to the list.</li>
+	<li>I read the list, so you are as likely to reach me that way as you
+	are by e-mailing me directly.</li>
+</ul>
+If, after all that, you still want to send me e-mail directly (compliments or
+bug reports, for example) then
+<a href="mailto:benji@member.AMS.org">go ahead!</a> 
+
+<a name="changelog">
+<h1>Change Log</h1>
+<ul>
+<li>990112  (1999 Ene 12)   Raul Segura Acevedo:  original author.</li>
+<li>24-Feb-2000 pottsdl<br>
+fixed searching mechanism to check for 'comment' syntax attribute, keeps it
+from finding a false match 'inside' a comment.</li>
+<li>March 8, 2000  Benji Fisher:<br>
+  I added comments, did a few things to simplify it (without changing
+  the function, I hope) and modified the definitions of
+  <kbd>b:match_words</kbd>
+  for vim files, added a definition for LaTeX files.</li>
+<li>March 10, 2000  Benji Fisher:<br>
+  I rewrote the function <kbd>Busca()</kbd> to make it non-recursive.
+  I succeeded, but
+it is still very slow.  (On a 900-line LaTeX document, it takes 2 or 3 seconds
+to go from <kbd>\begin{document}</kbd> to <kbd>\end{document}</kbd>.
+This is on a 400-MHz Pentium II.)</li>
+<li>March 19, 2000  Benji Fisher:<br>
+  I cleaned things up:  removed raw <kbd>&lt;CR&gt;</kbd> characters, removed redundancy from
+<kbd>Busca()</kbd>, and so on.  I added the <kbd>b:match_comment</kbd> option.
+This speeds it up for LaTeX:  on the sample file described above, it takes less
+than a second.</li>
+<li>April 6, 2000 Benji Fisher:<br>
+  Minor changes:  uncomment autocommands at end of file (some lines that had
+been commented out caused problems), added a test for
+<kbd>b:match_words=""</kbd> to the
+test for <kbd>exists("b:match_words")</kbd>,
+fixed the vim pattern for <kbd>aug...aug END</kbd>.
+Then posted this as the non-beta version.</li>
+<li>Late April, 2000 Benji Fisher:<br>
+  Following a suggestion of Johannes Zellner, I implemented back references
+  and posted this as the new beta version.
+  This is a major change; I now consider this my own script, not merely a
+  script with which I am tinkering.  I posted this for beta testing.  Since
+  then, I have fixed a bug or two, played with the definitions of
+  <kbd>b:match_words</kbd>, added the <kbd>b:match_ignorecase</kbd> option,
+  and started the HTML documentation.  </li>
+<li>May 23, 2000 Benji Fisher:<br>
+  I finished the documentation and declared that beta testing was done for this
+  version.  Now, I can start thinking about improving the script again!</li>
+<li>May 27, 2000 Benji Fisher:<br>
+  I fixed it so that <kbd>b:match_match</kbd> and <kbd>b:match_col</kbd> get
+  set (assuming debugging is turned on) even if the script bails out and calls
+  <kbd>:normal! %</kbd>.  I also postponed the first time that the cursor is
+  moved, eliminated the <kbd>top_of_screen</kbd> variable used in defining
+  <kbd>restore_screen</kbd>, and fixed the <kbd>'</kbd> mark.  I implemented
+  <kbd>g%</kbd> to go backwards and I implemented the option
+  <kbd>b:match_strings_like_comments</kbd>.</li>
+<li>July 15, 2000 Benji Fisher:<br>
+  I added support for DTD and updated XML, both thanks to Johannes Zellner.</li>
+<li>November 22, 2000 Benji Fisher:<br>
+  I added support for <kbd>&lt;count&gt;%</kbd> in Normal mode, after
+  Bram Moolenaar pointed out that this was broken.  I have not figured
+  out how to do this in Visual mode.  Update:  it is not my fault.
+  There is a patch in current versions of vim 6.0 that allows one to
+  access v:count after starting in Visual mode.</li>
+<li>December 20, 2000 Benji Fisher:<br>
+  I have tried to fix it so that <kbd>'\\'</kbd> is recognized as an
+  escaped backslash.  It seems to work for TeX:  I added matching rules
+  for equations delimited by <kbd>'\('</kbd> and <kbd>'\)'</kbd>.</li>
+<li>December 22, 2000 Benji Fisher:<br>
+  I implemented <kbd>'\@!'</kbd> to be similar to what it means in vim 6.0:
+  <kbd>'&lt;\@!foo&gt;'</kbd> means to put the cursor after the
+  <kbd>&lt;</kbd>.  In the process, I also added the helper function
+  <kbd>Match_choose()</kbd>.  Although this saves only a few lines in the main
+  program, it simplifies the flow (removing an explicit loop) and reduces the
+  number of variables, which make it easier to understand.</li>
+<li>December 31, 2000 Benji Fisher:<br>
+  After playing with vim 6.0, I realized that the <kbd>'\@!'</kbd>
+  mentioned above should really be <kbd>'\@&lt;='</kbd>, and modified
+  the script accordingly.  I added support for Lua (Max Ischenko) and ASP
+  with VBS (Gontran BAERTS), and added jsp to the html autocommands
+  (Scott Johnston).  I also fixed a bug in the cursor-positioning code,
+  which showed up if <kbd>"if...endif...if"</kbd> all appeared on one
+  line.</li>
+<li>December 31, 2000 Benji Fisher:<br>
+  Progress on updating the script for vim 6.0!  I simplified the script
+  with the new syntax for <kbd>strlen()</kbd> and script-local variables
+  (which simplified the autocommands).  I added a check for
+  <kbd>'cpo'</kbd> and another against double loading (both suggested by
+  the docs and by Dr. C).  The new <kbd>search()</kbd> function greatly
+  simplifies the <kbd>s:Busca()</kbd> function!  I switched the meaning
+  of commas and colons in <kbd>b:match_words</kbd>, to be consistent
+  with the <kbd>'matchpairs'</kbd> option.  I think this has been
+  backwards since before I started maintaining the script.
+  been 
+</ul>
+<!-- DATE AND ADDRESS -->
+<HR>
+<address>
+    <font color=magenta>&#169;</font>
+    <a href="mailto:benji@member.AMS.org">benji@member.AMS.org</a> 
+</address>
+<font size=-2>LAST MODIFICATION: "Fri, 29 Jun 2001 08:51:40 Eastern Daylight Time ()"</font>
+</body> 
+</html> 
+
