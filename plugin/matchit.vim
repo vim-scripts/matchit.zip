@@ -1,7 +1,7 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: Mon May 15 10:00 PM 2006 EDT
+"  Last Change: Tue Oct 24 11:00 AM 2006 EDT
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.11, for Vim 6.3+
+"  Version:     1.12, for Vim 6.3+
 "  URL:		http://www.vim.org/script.php?script_id=39
 
 " Documentation:
@@ -651,7 +651,7 @@ fun! s:MultiMatch(spflag, mode)
   "   s:all	regexp based on s:pat and the default groups
   " This part is copied and slightly modified from s:Match_wrapper().
   let default = escape(&mps, '[$^.*~\\/?]') . (strlen(&mps) ? "," : "") .
-    \ '\/\*:\*\/,#if\%(def\)\=:$else\>:#elif\>:#endif\>'
+    \ '\/\*:\*\/,#if\%(def\)\=:#else\>:#elif\>:#endif\>'
   " Allow b:match_words = "GetVimMatchWords()" .
   if b:match_words =~ ":"
     let match_words = b:match_words
@@ -682,10 +682,12 @@ fun! s:MultiMatch(spflag, mode)
   " - maybe even more functionality should be split off
   " - into separate functions!
   let cdefault = (s:pat =~ '[^,]$' ? "," : "") . default
-  let open =  substitute(s:pat . cdefault, ':[^,]*,', '\\),\\(', 'g')
-  let open =  '\(' . substitute(open, ':[^,]*$', '\\)', '')
-  let close = substitute(s:pat . cdefault, ',[^,]*:', '\\),\\(', 'g')
-  let close = substitute(close, '[^,]*:', '\\(', '') . '\)'
+  let open =  substitute(s:pat . cdefault,
+	\ s:notslash . '\zs:.\{-}' . s:notslash . ',', '\\),\\(', 'g')
+  let open =  '\(' . substitute(open, s:notslash . '\zs:.*$', '\\)', '')
+  let close = substitute(s:pat . cdefault,
+	\ s:notslash . '\zs,.\{-}' . s:notslash . ':', '\\),\\(', 'g')
+  let close = substitute(close, '^.\{-}' . s:notslash . ':', '\\(', '') . '\)'
   if exists("b:match_skip")
     let skip = b:match_skip
   elseif exists("b:match_comment") " backwards compatibility and testing!
