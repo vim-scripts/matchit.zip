@@ -1,7 +1,7 @@
 "  matchit.vim: (global plugin) Extended "%" matching
-"  Last Change: Wed Aug 29 05:00 PM 2007 EDT
+"  Last Change: Sun Sep 09 09:00 AM 2007 EDT
 "  Maintainer:  Benji Fisher PhD   <benji@member.AMS.org>
-"  Version:     1.13, for Vim 6.3+
+"  Version:     1.13.1, for Vim 6.3+
 "  URL:		http://www.vim.org/script.php?script_id=39
 
 " Documentation:
@@ -134,9 +134,6 @@ function! s:Match_wrapper(word, forward, mode) range
       \ '\/\*:\*\/,#if\%(def\)\=:#else\>:#elif\>:#endif\>'
     " s:all = pattern with all the keywords
     let match_words = match_words . (strlen(match_words) ? "," : "") . default
-    let s:all = substitute(match_words, s:notslash . '\zs[,:]\+', '\\|', 'g')
-    let s:all = '\%(' . s:all . '\)'
-    " let s:all = '\%(' . substitute(s:all, '\\\ze[,:]', '', 'g') . '\)'
     if match_words !~ s:notslash . '\\\d'
       let s:do_BR = 0
       let s:pat = match_words
@@ -144,6 +141,9 @@ function! s:Match_wrapper(word, forward, mode) range
       let s:do_BR = 1
       let s:pat = s:ParseWords(match_words)
     endif
+    let s:all = substitute(s:pat, s:notslash . '\zs[,:]\+', '\\|', 'g')
+    let s:all = '\%(' . s:all . '\)'
+    " let s:all = '\%(' . substitute(s:all, '\\\ze[,:]', '', 'g') . '\)'
     if exists("b:match_debug")
       let b:match_pat = s:pat
     endif
